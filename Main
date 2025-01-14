@@ -1,0 +1,106 @@
+#include <iostream>
+#include <fstream>
+#include <stack>
+#include <string>
+#include <vector>
+#include <sstream>
+#include <cmath>
+#include <stdexcept>
+#include <exception>
+
+using namespace std;
+
+double performOperation(double a, double b, char op) {
+    switch (op) {
+        case '+': return a + b;
+        case '-': return a - b;
+        case '*': return a * b;
+        case '/': 
+            if (b == 0) throw runtime_error("Division by zero");
+            return a / b;
+        case '^': return pow(a, b);
+        default: throw invalid_argument("Invalid operator");
+    }
+}
+
+    string infixToPostfix(const string& infix) {
+    stack<char> operators;
+    ostringstream postfix;
+    for (char ch : infix) {
+        if (isdigit(ch)) {
+            postfix << ch;
+        } else if (ch == '(') {
+            operators.push(ch);
+        } else if (ch == ')') {
+            while (!operators.empty() && operators.top() != '(') {
+                postfix << operators.top();
+                operators.pop();
+            }
+            if (!operators.empty()) operators.pop();
+        } else {
+            while (!operators.empty() && operators.top() != '(' &&
+                   ((ch == '+' || ch == '-') || (ch == '*' || ch == '/') || (ch == '^'))) {
+                postfix << operators.top();
+                operators.pop();
+            }
+            operators.push(ch);
+        }
+    }
+    while (!operators.empty()) {
+        postfix << operators.top();
+        operators.pop();
+    }
+    return postfix.str();
+}
+
+double evaluatePostfix(const string& postfix) {
+    stack<double> operands;
+    for (char ch : postfix) {
+        if (isdigit(ch)) {
+            operands.push(ch - '0');
+        } else {
+            double b = operands.top(); operands.pop();
+            double a = operands.top(); operands.pop();
+            operands.push(performOperation(a, b, ch));
+        }
+    }
+    return operands.top();
+}
+
+void saveHistory(const vector<string>& history) {
+    ofstream file("history.txt", ios::app);
+    for (const string& entry : history) {
+        file << entry << endl;
+    }
+    file.close();
+}
+
+    vector<string> readHistory() {
+    vector<string> history;
+    ifstream file("history.txt");
+    string line;
+    while (getline(file, line)) {
+        history.push_back(line);
+    }
+    file.close();
+    return history;
+}
+
+int main() {
+    vector<string> history;
+    string expression;
+    cout << "Enter expression (type 'exit' to quit): ";
+    while (getline(cin, expression) && expression != "exit") {
+        try {
+            string postfix = infixToPostfix(expression);
+            double result = evaluatePostfix(postfix);
+            cout << "Result: " << result << endl;
+            history.push_back(expression + " = " + to_string(result));
+        } catch (const exception& e) {
+            cerr << "Error: " << e.what() << endl;
+        }
+        cout << "Enter expression (type 'exit' to quit): ";
+    }
+    saveHistory(history);
+    return 0;
+}
