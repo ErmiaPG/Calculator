@@ -1,81 +1,101 @@
 #include <iostream>
 #include <fstream>
-#include <stack>
 #include <string>
-#include <vector>
 #include <sstream>
+#include <vector>
+#include <stack>
 #include <cmath>
-#include <stdexcept>
-#include <exception>
+#include <chrono>
+#include <thread>
 
 using namespace std;
+using namespace chrono;
 
-double performOperation(double a, double b, char op) {
+void clearScreen() {
+    system("cls");
+}
+
+double performOperation_by_Mahdi(double a, double b, char op) {
     switch (op) {
         case '+': return a + b;
         case '-': return a - b;
         case '*': return a * b;
-        case '/': 
-            if (b == 0) throw runtime_error("Division by zero");
-            return a / b;
+        case '/': return a / b;
         case '^': return pow(a, b);
-        default: throw invalid_argument("Invalid operator");
+        default: break;
     }
+    return 0;
 }
 
-    string infixToPostfix(const string& infix) {
+string infixToPostfix_by_Ermia(const string& infix) {
     stack<char> operators;
     ostringstream postfix;
-    for (char ch : infix) {
+    for (size_t i = 0; i < infix.length(); ++i) {
+        char ch = infix[i];
         if (isdigit(ch)) {
-            postfix << ch;
-        } else if (ch == '(') {
+            while (i < infix.length() && isdigit(infix[i])) {
+                postfix << infix[i];
+                ++i;
+            }
+            postfix << ' ';
+            --i;
+        }
+        else if (ch == '(') {
             operators.push(ch);
-        } else if (ch == ')') {
+        }
+        else if (ch == ')') {
             while (!operators.empty() && operators.top() != '(') {
-                postfix << operators.top();
+                postfix << operators.top() << ' ';
                 operators.pop();
             }
-            if (!operators.empty()) operators.pop();
-        } else {
+            if (!operators.empty()) 
+                operators.pop();
+        }
+        else {
             while (!operators.empty() && operators.top() != '(' &&
                    ((ch == '+' || ch == '-') || (ch == '*' || ch == '/') || (ch == '^'))) {
-                postfix << operators.top();
+                postfix << operators.top() << ' ';
                 operators.pop();
             }
             operators.push(ch);
         }
     }
     while (!operators.empty()) {
-        postfix << operators.top();
+        postfix << operators.top() << ' ';
         operators.pop();
     }
     return postfix.str();
 }
 
-double evaluatePostfix(const string& postfix) {
+double evaluatePostfix_by_Ermia(const string& postfix) {
     stack<double> operands;
-    for (char ch : postfix) {
-        if (isdigit(ch)) {
-            operands.push(ch - '0');
-        } else {
-            double b = operands.top(); operands.pop();
-            double a = operands.top(); operands.pop();
-            operands.push(performOperation(a, b, ch));
+    istringstream iss(postfix);
+    string token;
+    while (iss >> token) {
+        if (isdigit(token[0])) {
+            operands.push(stod(token));
+        }
+        else {
+            double b = operands.top();
+            operands.pop();
+            double a = operands.top();
+            operands.pop();
+            operands.push(performOperation_by_Mahdi(a, b, token[0]));
         }
     }
     return operands.top();
 }
 
-void saveHistory(const vector<string>& history) {
+void saveHistory_by_Amin(const vector<string>& history) {
     ofstream file("history.txt", ios::app);
+    file << "\t\t\t\t\t\t -->History<--" << endl;
     for (const string& entry : history) {
         file << entry << endl;
     }
     file.close();
 }
 
-    vector<string> readHistory() {
+vector<string> readHistory() {
     vector<string> history;
     ifstream file("history.txt");
     string line;
@@ -89,18 +109,81 @@ void saveHistory(const vector<string>& history) {
 int main() {
     vector<string> history;
     string expression;
-    cout << "Enter expression (type 'exit' to quit): ";
+    cout << "->>Enter expression<<-\n\tOrdinary calculation\n\tComplex calculation : Select (sin/cos/tan/log/exp/sqrt)\n\tCleaning the page\n\tHistory\n(type 'exit' to quit): \n";
     while (getline(cin, expression) && expression != "exit") {
-        try {
-            string postfix = infixToPostfix(expression);
-            double result = evaluatePostfix(postfix);
-            cout << "Result: " << result << endl;
-            history.push_back(expression + " = " + to_string(result));
-        } catch (const exception& e) {
-            cerr << "Error: " << e.what() << endl;
+        if (expression == "c" || expression == "C") {
+            clearScreen();
+            cout << "The screen has been cleared successfully" << endl;
+            continue;
         }
+        if (expression == "history")
+        {
+            vector<string> savedHistory = readHistory();
+            cout << "\t\t\t\t\t\t -->History<--" << endl;
+            for (const string& entry : savedHistory)
+                cout << entry << endl;
+            continue;
+        }
+        if (expression == "sin" || expression == "cos" || expression == "tan" || expression == "log" || expression == "exp" || expression == "sqrt")
+        {
+            double x;
+            cout << "Enter the value: ";
+            cin >> x;
+            double result;
+            if (expression == "sin")
+                result = sin(x);
+            else if (expression == "cos")
+                result = cos(x);
+            else if (expression == "tan")
+                result = tan(x);
+            else if (expression == "log")
+                result = log(x);
+            else if (expression == "exp")
+                result = exp(x);
+            else if (expression == "sqrt")
+                result = sqrt(x);
+            cout << result << endl;
+            history.push_back(expression + "(" + to_string(x) + ") = " + to_string(result));
+            cin.ignore();
+            continue;
+            }
+        string postfix = infixToPostfix_by_Ermia(expression);
+        double result = evaluatePostfix_by_Ermia(postfix);
+        cout << "Result: " << result << endl;
+        history.push_back(expression + " = " + to_string(result));
         cout << "Enter expression (type 'exit' to quit): ";
     }
-    saveHistory(history);
+    cout << "Goodluck \n hope you enjoyed EAM Calculator\n ";
+    saveHistory_by_Amin(history);
+    
+    string text = "Powered by EAM Organization";
+    int consoleWidth = 40;
+    int textLength = text.length();
+    auto start = high_resolution_clock::now();
+    while (true) {
+        clearScreen();
+        auto now = high_resolution_clock::now();
+        auto duration = duration_cast<seconds>(now - start).count();
+
+        if (duration >= 5) {
+            break;
+        }
+
+        for (int i = 0; i < consoleWidth; ++i) {
+            if (i < consoleWidth - textLength) {
+                cout << " ";
+            } else {
+                cout << text;
+            }
+        }
+        cout << flush;
+        this_thread::sleep_for(milliseconds(100));
+
+        text = " " + text;
+
+        if (text.length() > consoleWidth) {
+            text.erase(text.begin());
+        }
+    }
     return 0;
 }
