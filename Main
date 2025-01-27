@@ -15,7 +15,7 @@ void clearScreen() {
     system("cls");
 }
 
-double performOperation_by_Mahdi(double a, double b, char op) {
+double performOperation(double a, double b, char op) {
     switch (op) {
         case '+': return a + b;
         case '-': return a - b;
@@ -30,7 +30,7 @@ double performOperation_by_Mahdi(double a, double b, char op) {
 string infixToPostfix_by_Ermia(const string& infix) {
     stack<char> operators;
     ostringstream postfix;
-    for (size_t i = 0; i < infix.length(); ++i) {
+    for (int i = 0; i < infix.length(); ++i) {
         char ch = infix[i];
         if (isdigit(ch)) {
             while (i < infix.length() && isdigit(infix[i])) {
@@ -80,13 +80,13 @@ double evaluatePostfix_by_Ermia(const string& postfix) {
             operands.pop();
             double a = operands.top();
             operands.pop();
-            operands.push(performOperation_by_Mahdi(a, b, token[0]));
+            operands.push(performOperation(a, b, token[0]));
         }
     }
     return operands.top();
 }
 
-void saveHistory_by_Amin(const vector<string>& history) {
+void saveHistory(const vector<string>& history) {
     ofstream file("history.txt", ios::app);
     file << "\t\t\t\t\t\t -->History<--" << endl;
     for (const string& entry : history) {
@@ -144,7 +144,6 @@ int main() {
                 result = sqrt(x);
             cout << result << endl;
             history.push_back(expression + "(" + to_string(x) + ") = " + to_string(result));
-            cin.ignore();
             continue;
             }
         string postfix = infixToPostfix_by_Ermia(expression);
@@ -153,8 +152,19 @@ int main() {
         history.push_back(expression + " = " + to_string(result));
         cout << "Enter expression (type 'exit' to quit): ";
     }
-    cout << "Goodluck \n hope you enjoyed EAM Calculator\n ";
-    saveHistory_by_Amin(history);
+    saveHistory(history);
+
+
+
+
+
+
+
+
+
+
+
+
     
     string text = "Powered by EAM Organization";
     int consoleWidth = 40;
@@ -185,5 +195,6 @@ int main() {
             text.erase(text.begin());
         }
     }
+
     return 0;
 }
